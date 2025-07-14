@@ -1,10 +1,10 @@
 "use client";
 import React, {useCallback, useState} from 'react';
 import {FileRejection, useDropzone} from 'react-dropzone';
-import { Button } from './button';
+import { Button } from './FirmWalletButton';
 import { toast } from 'sonner';
 import { pinata } from '@/lib/pinata';
-import { Loader2, Trash2Icon} from 'lucide-react';
+import { Loader2, Trash2Icon, CloudUpload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { deleteImage } from '@/lib/actions';
 
@@ -88,6 +88,13 @@ if(fileRejection.length){
     toast.error('File exceeds 5mb limit!')
   }
 
+  const invalidType = fileRejection.find((rejection) =>
+  rejection.errors[0].code === "file-invalid-type"
+);
+if (invalidType) {
+  toast.error('Invalid file type! Only images and common document types are allowed.');
+}
+
 
 }
  },[])
@@ -97,53 +104,40 @@ if(fileRejection.length){
     maxFiles:5,
     maxSize: 1024 * 1024 * 5, //5mb
     accept: {
-      "image/*":[],
+      "image/*": [],
+    "application/pdf": [],
+    "application/msword": [], // .doc
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // .docx
+    "application/vnd.ms-excel": [], // .xls
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // .xlsx
+    "application/vnd.ms-powerpoint": [], // .ppt
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": [], // .pptx
+    "text/csv": [],
+    "text/plain": [],
     }
   })
 
   return (
-    <>
-    <div {...getRootProps({
-      className:'p-16 mt-10 border-dashed rounded-lg border-2 w-full'
-    })}>
-      <input {...getInputProps()} />
-      {
-        isDragActive ?
-          <p>Drop the files here ...</p> :
-          <div className='flex flex-col items-center gap-y-3'>
-            <p>Drag 'n' drop some files here, or click to select files</p>
-            <Button>Select Files</Button>
-          </div>
-      }
+    <div className="w-full flex flex-col items-start">
+      <h1 className="font-sans text-[24px] font-medium mb-8 ml-2" style={{ fontFamily: 'Inter, sans-serif' }}>My Wallet</h1>
+      <div
+        {...getRootProps({
+          className:
+            'bg-white border border-dashed border-gray-300 rounded-xl w-full min-h-[300px] flex flex-col items-center justify-center p-12 shadow-sm',
+        })}
+      >
+        <input {...getInputProps()} />
+        <CloudUpload className="w-12 h-12 text-gray-400 mb-6" />
+        <p className="text-lg font-medium text-gray-700 mb-2 text-center">
+          Drag & drop some files here, or click to select files
+        </p>
+        <p className="text-sm text-gray-500 mb-6 text-center">
+          Support various file types (PDF, DOCX, Images, etc.)
+        </p>
+        <Button className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-8 py-2 rounded-md shadow-none">
+          Select Files
+        </Button>
+      </div>
     </div>
-    <div className='mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4'>
-      {files.map(({file, uploading, id}) =>(
-        <div key={file.name} className='realtive w-full group'>
-          <div className='relative'>
-            <img
-              src={URL.createObjectURL(file)}
-              alt={file.name}
-              width={200}
-              height={200}
-              className={cn(uploading && 'opacity-50', 'rounded-lg object-cover size-32')}
-            />
-            {uploading && (
-              <div className='absolute inset-0 flex items-center justify-center'>
-                <Loader2 className='size-6 animate-spin text-primary' />
-              </div>
-            )}
-            <form action={()=>removeFile(id!, file.name)} className='absolute top-2 right-2 opacity-0 group-hover:opacity-100
-                      transition-opacity'>
-            <Button size="icon" variant="destructive">
-              <Trash2Icon/>
-            </Button>
-          </form>
-          </div>
-
-          <p className='mt-2 text-sm text-gray-500 truncate'>{file.name}</p>
-        </div>
-      ))}
-    </div>
-  </>
   );
 }
